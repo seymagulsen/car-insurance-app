@@ -10,14 +10,12 @@ import plotly.graph_objects as go
 
 # === Visual Header Section ===
 
-# Set page config
 st.set_page_config(
     page_title="Car Insurance Claim Prediction | ADS 542 Project",
     page_icon="🚗",
     layout="wide"
 )
 
-# TEDU Logo and Title
 logo_col, title_col = st.columns([1, 5])
 with logo_col:
     tedu_logo = Image.open("tedu_logo.png")
@@ -30,7 +28,6 @@ with title_col:
     """, unsafe_allow_html=True)
 
 st.markdown("---")
-
 
 # === Custom Classes ===
 
@@ -114,84 +111,103 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
 # === Load pipeline ===
 model = pickle.load(open('car_insurance_pipeline.pkl', 'rb'))
 
+# === Input Form ===
+with st.form("input_form"):
+    st.markdown("## 📎 Customer Information Form")
 
-# === Sidebar Input ===
-st.sidebar.header("Customer Information")
+    col1, col2 = st.columns(2)
+    with col1:
+        age = st.selectbox("Age Group", ['16-25', '26-39', '40-64', '65+'])
+        gender = st.selectbox("Gender", ['male', 'female'])
+        race = st.selectbox("Race", ['majority', 'minority'])
+        driving = st.selectbox("Driving Experience", ['0-9y', '10-19y', '20-29y', '30y+'])
 
-def user_input():
-    data = {
-        'AGE': st.sidebar.selectbox("Age Group", ['16-25', '26-39', '40-64', '65+'], help="Customer's age range"),
-        'GENDER': st.sidebar.selectbox("Gender", ['male', 'female'], help="Customer's gender"),
-        'RACE': st.sidebar.selectbox("Race", ['majority', 'minority'], help="Ethnic group identification"),
-        'DRIVING_EXPERIENCE': st.sidebar.selectbox("Driving Experience", ['0-9y', '10-19y', '20-29y', '30y+'], help="Years of driving experience"),
-        'EDUCATION': st.sidebar.selectbox("Education Level", ['none', 'high school', 'university'], help="e.g., university degree"),
-        'INCOME': st.sidebar.selectbox("Income Bracket", ['poverty', 'working class', 'middle class', 'upper class'], help="Customer's income category"),
-        'CREDIT_SCORE': st.sidebar.number_input("Credit Score", min_value=0.0, help="e.g., 600.0"),
-        'VEHICLE_OWNERSHIP': st.sidebar.checkbox("Owns Vehicle", help="Check if owns a vehicle"),
-        'VEHICLE_YEAR': st.sidebar.selectbox("Vehicle Year", ['before 2015', 'after 2015'], help="Year category of the car"),
-        'MARRIED': st.sidebar.checkbox("Married", help="Check if married"),
-        'CHILDREN': st.sidebar.checkbox("Has Children", help="Check if has children"),
-        'ANNUAL_MILEAGE': st.sidebar.number_input("Annual Mileage (in miles)", min_value=0.0, help="e.g., 12000"),
-        'VEHICLE_TYPE': st.sidebar.selectbox("Vehicle Type", ['sedan', 'sports car'], help="Type of vehicle owned"),
-        'SPEEDING_VIOLATIONS': st.sidebar.number_input("Speeding Violations", min_value=0, help="Total number of speeding violations"),
-        'DUIS': st.sidebar.number_input("DUIs", min_value=0, help="Total DUI offenses"),
-        'PAST_ACCIDENTS': st.sidebar.number_input("Past Accidents", min_value=0, help="Total past accidents")
-    }
-    return pd.DataFrame([data])
+    with col2:
+        education = st.selectbox("Education Level", ['none', 'high school', 'university'])
+        income = st.selectbox("Income Bracket", ['poverty', 'working class', 'middle class', 'upper class'])
+        credit_score = st.number_input("Credit Score", min_value=0.0)
+        mileage = st.number_input("Annual Mileage", min_value=0.0)
 
-input_df = user_input()
+    col3, col4 = st.columns(2)
+    with col3:
+        vehicle_ownership = st.checkbox("Owns Vehicle")
+        vehicle_year = st.selectbox("Vehicle Year", ['before 2015', 'after 2015'])
+        married = st.checkbox("Married")
+        children = st.checkbox("Has Children")
 
-# === Prediction Output ===
-if st.button("Predict"):
-    probability = model.predict_proba(input_df)[0][1]
-    prediction = model.predict(input_df)[0]
+    with col4:
+        vehicle_type = st.selectbox("Vehicle Type", ['sedan', 'sports car'])
+        speeding = st.number_input("Speeding Violations", min_value=0)
+        duis = st.number_input("DUIs", min_value=0)
+        accidents = st.number_input("Past Accidents", min_value=0)
 
-    st.subheader("🔍 Prediction Result")
-    st.markdown(f"**🧮 Probability of Purchasing Insurance:** `{probability:.2%}`")
+    submitted = st.form_submit_button("Predict")
 
-    if prediction == 1:
-        st.success("🟢 This customer is likely to purchase car insurance.")
-        st.markdown("💡 _This customer shows strong interest in car insurance. Consider personalized offers._")
-    else:
-        st.warning("🟠 This customer is unlikely to purchase car insurance.")
-        st.markdown("💡 _This customer may require a different marketing approach._")
+    if submitted:
+        data = pd.DataFrame([{ 
+            'AGE': age,
+            'GENDER': gender,
+            'RACE': race,
+            'DRIVING_EXPERIENCE': driving,
+            'EDUCATION': education,
+            'INCOME': income,
+            'CREDIT_SCORE': credit_score,
+            'VEHICLE_OWNERSHIP': vehicle_ownership,
+            'VEHICLE_YEAR': vehicle_year,
+            'MARRIED': married,
+            'CHILDREN': children,
+            'ANNUAL_MILEAGE': mileage,
+            'VEHICLE_TYPE': vehicle_type,
+            'SPEEDING_VIOLATIONS': speeding,
+            'DUIS': duis,
+            'PAST_ACCIDENTS': accidents
+        }])
 
-    # Progress bar
-    st.progress(int(probability * 100))
+        probability = model.predict_proba(data)[0][1]
+        prediction = model.predict(data)[0]
 
+        st.subheader("🔍 Prediction Result")
+        st.markdown(f"**🧾 Probability of Purchasing Insurance:** `{probability:.2%}`")
 
-    # Gauge chart
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=probability * 100,
-        title={'text': "Purchase Probability (%)"},
-        gauge={
-            'axis': {'range': [0, 100]},
-            'bar': {'color': "green" if prediction == 1 else "orange"}
-        }
-    ))
-    st.plotly_chart(fig)
+        if prediction == 1:
+            st.success("🟢 This customer is likely to purchase car insurance.")
+            st.markdown("💡 _This customer shows strong interest in car insurance. Consider personalized offers._")
+        else:
+            st.warning("🟠 This customer is unlikely to purchase car insurance.")
+            st.markdown("💡 _This customer may require a different marketing approach._")
 
-    # Feature importances
-    st.subheader("🔬 Feature Importances")
-    try:
-        classifier = model.named_steps['classifier']
-        preprocessor = model.named_steps['preprocessor']
-        feature_names = preprocessor.get_feature_names_out()
-        importances = classifier.feature_importances_
+        st.progress(int(probability * 100))
 
-        importance_df = pd.DataFrame({
-            'Feature': feature_names,
-            'Importance': importances
-        }).sort_values(by='Importance', ascending=False).head(15)
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=probability * 100,
+            title={'text': "Purchase Probability (%)"},
+            gauge={
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "green" if prediction == 1 else "orange"}
+            }
+        ))
+        st.plotly_chart(fig)
 
-        st.bar_chart(importance_df.set_index('Feature'))
-    except Exception as e:
-        st.error(f"⚠️ Feature importance visualization failed: {e}")
+        st.subheader("🔬 Feature Importances")
+        try:
+            classifier = model.named_steps['classifier']
+            preprocessor = model.named_steps['preprocessor']
+            feature_names = preprocessor.get_feature_names_out()
+            importances = classifier.feature_importances_
 
-    with st.expander("🔎 See Input Data"):
-        st.write(input_df)
-        
+            importance_df = pd.DataFrame({
+                'Feature': feature_names,
+                'Importance': importances
+            }).sort_values(by='Importance', ascending=False).head(15)
+
+            st.bar_chart(importance_df.set_index('Feature'))
+        except Exception as e:
+            st.error(f"⚠️ Feature importance visualization failed: {e}")
+
+        with st.expander("🔎 See Input Data"):
+            st.write(data)
+
 # === Footer ===
 st.markdown("---")
 st.markdown("— Made by Şeyma Gülşen Akkuş", unsafe_allow_html=True)
