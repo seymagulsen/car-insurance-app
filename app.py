@@ -29,6 +29,20 @@ with title_col:
 
 st.markdown("---")
 
+st.markdown("""
+### 🧠 About This App
+This interactive tool is designed for predicting the likelihood that a customer will purchase car insurance based on their demographic and driving-related features.
+
+The model has been trained on a structured dataset using machine learning techniques, and it evaluates features such as credit score, vehicle type, driving experience, and more to produce a probability score.
+
+To use the app:
+1. Fill in the customer information fields below.
+2. Click the **Predict** button.
+3. View the prediction result, visual interpretation, and top contributing features.
+""")
+
+st.markdown("---")
+
 # === Custom Classes ===
 
 class ModelBasedImputer(BaseEstimator, TransformerMixin):
@@ -113,33 +127,33 @@ model = pickle.load(open('car_insurance_pipeline.pkl', 'rb'))
 
 # === Input Form ===
 with st.form("input_form"):
-    st.markdown("## 📎 Customer Information Form")
+    st.markdown("## 📌 Customer Information Form")
 
     col1, col2 = st.columns(2)
     with col1:
-        age = st.selectbox("Age Group", ['16-25', '26-39', '40-64', '65+'])
-        gender = st.selectbox("Gender", ['male', 'female'])
-        race = st.selectbox("Race", ['majority', 'minority'])
-        driving = st.selectbox("Driving Experience", ['0-9y', '10-19y', '20-29y', '30y+'])
+        age = st.selectbox("Age Group", ['16-25', '26-39', '40-64', '65+'], help="Customer's age group (e.g., 26-39)")
+        gender = st.selectbox("Gender", ['male', 'female'], help="Gender of the customer")
+        race = st.selectbox("Race", ['majority', 'minority'], help="Ethnic group classification")
+        driving = st.selectbox("Driving Experience", ['0-9y', '10-19y', '20-29y', '30y+'], help="Years of driving experience")
 
     with col2:
-        education = st.selectbox("Education Level", ['none', 'high school', 'university'])
-        income = st.selectbox("Income Bracket", ['poverty', 'working class', 'middle class', 'upper class'])
-        credit_score = st.number_input("Credit Score", min_value=0.0)
-        mileage = st.number_input("Annual Mileage", min_value=0.0)
+        education = st.selectbox("Education Level", ['none', 'high school', 'university'], help="Highest education level completed")
+        income = st.selectbox("Income Bracket", ['poverty', 'working class', 'middle class', 'upper class'], help="Income category of the customer")
+        credit_score = st.number_input("Credit Score", min_value=0.05, max_value=0.96, help="Credit score between 0.05 and 0.96")
+        mileage = st.number_input("Annual Mileage", min_value=2000.0, max_value=22000.0, help="Miles driven annually (2000–22000)")
 
     col3, col4 = st.columns(2)
     with col3:
-        vehicle_ownership = st.checkbox("Owns Vehicle")
-        vehicle_year = st.selectbox("Vehicle Year", ['before 2015', 'after 2015'])
-        married = st.checkbox("Married")
-        children = st.checkbox("Has Children")
+        vehicle_ownership = st.checkbox("Owns Vehicle", help="Check if customer owns a vehicle")
+        vehicle_year = st.selectbox("Vehicle Year", ['before 2015', 'after 2015'], help="Year range of the customer's vehicle")
+        married = st.checkbox("Married", help="Check if customer is married")
+        children = st.checkbox("Has Children", help="Check if customer has children")
 
     with col4:
-        vehicle_type = st.selectbox("Vehicle Type", ['sedan', 'sports car'])
-        speeding = st.number_input("Speeding Violations", min_value=0)
-        duis = st.number_input("DUIs", min_value=0)
-        accidents = st.number_input("Past Accidents", min_value=0)
+        vehicle_type = st.selectbox("Vehicle Type", ['sedan', 'sports car'], help="Type of vehicle")
+        speeding = st.number_input("Speeding Violations", min_value=0, max_value=22, help="Number of speeding violations (0–22)")
+        duis = st.number_input("DUIs", min_value=0, max_value=6, help="Number of DUI incidents (0–6)")
+        accidents = st.number_input("Past Accidents", min_value=0, max_value=15, help="Number of past accidents (0–15)")
 
     submitted = st.form_submit_button("Predict")
 
