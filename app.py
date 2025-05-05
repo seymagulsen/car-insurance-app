@@ -129,9 +129,7 @@ model = pickle.load(open('car_insurance_pipeline.pkl', 'rb'))
 if 'submitted' not in st.session_state:
     st.session_state.submitted = False
 
-if st.button("Start New Prediction"):
-    st.session_state.submitted = False
-    st.rerun()
+
 
 # === Input Form ===
 with st.form("input_form"):
@@ -238,6 +236,10 @@ if st.session_state.submitted:
     with st.expander("🔎 See Input Data"):
         st.write(data)
 
+if st.button("Start New Prediction"):
+    st.session_state.submitted = False
+    st.rerun()
+    
 # === Footer ===
 st.markdown("---")
 st.markdown("— Made by Şeyma Gülşen Akkuş", unsafe_allow_html=True)
