@@ -125,6 +125,14 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
 # === Load pipeline ===
 model = pickle.load(open('car_insurance_pipeline.pkl', 'rb'))
 
+# === Session state handling for reset ===
+if 'submitted' not in st.session_state:
+    st.session_state.submitted = False
+
+if st.button("Start New Prediction"):
+    st.session_state.submitted = False
+    st.experimental_rerun()
+
 # === Input Form ===
 with st.form("input_form"):
     st.markdown("## 📌 Customer Information Form")
@@ -158,69 +166,71 @@ with st.form("input_form"):
     submitted = st.form_submit_button("Predict")
 
     if submitted:
-        data = pd.DataFrame([{ 
-            'AGE': age,
-            'GENDER': gender,
-            'RACE': race,
-            'DRIVING_EXPERIENCE': driving,
-            'EDUCATION': education,
-            'INCOME': income,
-            'CREDIT_SCORE': credit_score,
-            'VEHICLE_OWNERSHIP': vehicle_ownership,
-            'VEHICLE_YEAR': vehicle_year,
-            'MARRIED': married,
-            'CHILDREN': children,
-            'ANNUAL_MILEAGE': mileage,
-            'VEHICLE_TYPE': vehicle_type,
-            'SPEEDING_VIOLATIONS': speeding,
-            'DUIS': duis,
-            'PAST_ACCIDENTS': accidents
-        }])
+        st.session_state.submitted = True
+if st.session_state.submitted:
+    data = pd.DataFrame([{ 
+        'AGE': age,
+        'GENDER': gender,
+        'RACE': race,
+        'DRIVING_EXPERIENCE': driving,
+        'EDUCATION': education,
+        'INCOME': income,
+        'CREDIT_SCORE': credit_score,
+        'VEHICLE_OWNERSHIP': vehicle_ownership,
+        'VEHICLE_YEAR': vehicle_year,
+        'MARRIED': married,
+        'CHILDREN': children,
+        'ANNUAL_MILEAGE': mileage,
+        'VEHICLE_TYPE': vehicle_type,
+        'SPEEDING_VIOLATIONS': speeding,
+        'DUIS': duis,
+        'PAST_ACCIDENTS': accidents
+    }])
 
-        probability = model.predict_proba(data)[0][1]
-        prediction = model.predict(data)[0]
+    probability = model.predict_proba(data)[0][1]
+    prediction = model.predict(data)[0]
 
-        st.subheader("🔍 Prediction Result")
-        st.markdown(f"**🧾 Probability of Purchasing Insurance:** `{probability:.2%}`")
+    st.subheader("🔍 Prediction Result")
+    st.markdown(f"**🧾 Probability of Purchasing Insurance:** `{probability:.2%}`")
 
-        if prediction == 1:
-            st.success("🟢 This customer is likely to purchase car insurance.")
-            st.markdown("💡 _This customer shows strong interest in car insurance. Consider personalized offers._")
-        else:
-            st.warning("🟠 This customer is unlikely to purchase car insurance.")
-            st.markdown("💡 _This customer may require a different marketing approach._")
+    if prediction == 1:
+        st.success("🟢 This customer is likely to purchase car insurance.")
+        st.markdown("💡 _This customer shows strong interest in car insurance. Consider personalized offers._")
+    else:
+        st.warning("🟠 This customer is unlikely to purchase car insurance.")
+        st.markdown("💡 _This customer may require a different marketing approach._")
 
-        st.progress(int(probability * 100))
+    st.progress(int(probability * 100))
 
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=probability * 100,
-            title={'text': "Purchase Probability (%)"},
-            gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'color': "green" if prediction == 1 else "orange"}
-            }
-        ))
-        st.plotly_chart(fig)
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=probability * 100,
+        title={'text': "Purchase Probability (%)"},
+        gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'color': "green" if prediction == 1 else "orange"}
+        }
+    ))
+    st.plotly_chart(fig)
 
-        st.subheader("🔬 Feature Importances")
-        try:
-            classifier = model.named_steps['classifier']
-            preprocessor = model.named_steps['preprocessor']
-            feature_names = preprocessor.get_feature_names_out()
-            importances = classifier.feature_importances_
+    st.subheader("🔬 Feature Importances")
+    try:
+        classifier = model.named_steps['classifier']
+        preprocessor = model.named_steps['preprocessor']
+        feature_names = preprocessor.get_feature_names_out()
+        importances = classifier.feature_importances_
 
-            importance_df = pd.DataFrame({
-                'Feature': feature_names,
-                'Importance': importances
-            }).sort_values(by='Importance', ascending=False).head(15)
+        importance_df = pd.DataFrame({
+            'Feature': feature_names,
+            'Importance': importances
+        }).sort_values(by='Importance', ascending=False).head(15)
 
-            st.bar_chart(importance_df.set_index('Feature'))
-        except Exception as e:
-            st.error(f"⚠️ Feature importance visualization failed: {e}")
+        st.bar_chart(importance_df.set_index('Feature'))
+    except Exception as e:
+        st.error(f"⚠️ Feature importance visualization failed: {e}")
 
-        with st.expander("🔎 See Input Data"):
-            st.write(data)
+    with st.expander("🔎 See Input Data"):
+        st.write(data)
 
 # === Footer ===
 st.markdown("---")
