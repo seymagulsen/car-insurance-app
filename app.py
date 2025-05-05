@@ -31,7 +31,6 @@ with title_col:
 
 st.markdown("---")
 
-
 # === Custom Classes ===
 
 class ModelBasedImputer(BaseEstimator, TransformerMixin):
@@ -114,40 +113,60 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
 # === Load pipeline ===
 model = pickle.load(open('car_insurance_pipeline.pkl', 'rb'))
 
+# === Input Form ===
+st.markdown("## 📎 Customer Information Form")
 
-# === Sidebar Input ===
-st.sidebar.header("Customer Information")
+col1, col2 = st.columns(2)
 
-def user_input():
-    data = {
-        'AGE': st.sidebar.selectbox("Age Group", ['16-25', '26-39', '40-64', '65+'], help="Customer's age range"),
-        'GENDER': st.sidebar.selectbox("Gender", ['male', 'female'], help="Customer's gender"),
-        'RACE': st.sidebar.selectbox("Race", ['majority', 'minority'], help="Ethnic group identification"),
-        'DRIVING_EXPERIENCE': st.sidebar.selectbox("Driving Experience", ['0-9y', '10-19y', '20-29y', '30y+'], help="Years of driving experience"),
-        'EDUCATION': st.sidebar.selectbox("Education Level", ['none', 'high school', 'university'], help="e.g., university degree"),
-        'INCOME': st.sidebar.selectbox("Income Bracket", ['poverty', 'working class', 'middle class', 'upper class'], help="Customer's income category"),
-        'CREDIT_SCORE': st.sidebar.number_input("Credit Score", min_value=0.0, help="e.g., 600.0"),
-        'VEHICLE_OWNERSHIP': st.sidebar.checkbox("Owns Vehicle", help="Check if owns a vehicle"),
-        'VEHICLE_YEAR': st.sidebar.selectbox("Vehicle Year", ['before 2015', 'after 2015'], help="Year category of the car"),
-        'MARRIED': st.sidebar.checkbox("Married", help="Check if married"),
-        'CHILDREN': st.sidebar.checkbox("Has Children", help="Check if has children"),
-        'ANNUAL_MILEAGE': st.sidebar.number_input("Annual Mileage (in miles)", min_value=0.0, help="e.g., 12000"),
-        'VEHICLE_TYPE': st.sidebar.selectbox("Vehicle Type", ['sedan', 'sports car'], help="Type of vehicle owned"),
-        'SPEEDING_VIOLATIONS': st.sidebar.number_input("Speeding Violations", min_value=0, help="Total number of speeding violations"),
-        'DUIS': st.sidebar.number_input("DUIs", min_value=0, help="Total DUI offenses"),
-        'PAST_ACCIDENTS': st.sidebar.number_input("Past Accidents", min_value=0, help="Total past accidents")
-    }
-    return pd.DataFrame([data])
+with col1:
+    age = st.selectbox("Age Group", ['16-25', '26-39', '40-64', '65+'], help="Customer's age range")
+    gender = st.selectbox("Gender", ['male', 'female'], help="Customer's gender")
+    race = st.selectbox("Race", ['majority', 'minority'], help="Ethnic group identification")
+    driving = st.selectbox("Driving Experience", ['0-9y', '10-19y', '20-29y', '30y+'], help="Years of driving experience")
+    education = st.selectbox("Education Level", ['none', 'high school', 'university'], help="e.g., university degree")
+    income = st.selectbox("Income Bracket", ['poverty', 'working class', 'middle class', 'upper class'], help="Income category")
 
-input_df = user_input()
+with col2:
+    credit_score = st.number_input("Credit Score", min_value=0.0, help="e.g., 600.0")
+    vehicle_ownership = st.checkbox("Owns Vehicle", help="Check if owns a vehicle")
+    vehicle_year = st.selectbox("Vehicle Year", ['before 2015', 'after 2015'], help="Year category of the car")
+    married = st.checkbox("Married", help="Check if married")
+    children = st.checkbox("Has Children", help="Check if has children")
+    mileage = st.number_input("Annual Mileage (in miles)", min_value=0.0, help="e.g., 12000")
+    vehicle_type = st.selectbox("Vehicle Type", ['sedan', 'sports car'], help="Type of vehicle owned")
+
+col3, _ = st.columns([1, 3])
+with col3:
+    speeding = st.number_input("Speeding Violations", min_value=0, help="Total number of speeding violations")
+    duis = st.number_input("DUIs", min_value=0, help="Total DUI offenses")
+    accidents = st.number_input("Past Accidents", min_value=0, help="Total past accidents")
+
+data = pd.DataFrame([{ 
+    'AGE': age,
+    'GENDER': gender,
+    'RACE': race,
+    'DRIVING_EXPERIENCE': driving,
+    'EDUCATION': education,
+    'INCOME': income,
+    'CREDIT_SCORE': credit_score,
+    'VEHICLE_OWNERSHIP': vehicle_ownership,
+    'VEHICLE_YEAR': vehicle_year,
+    'MARRIED': married,
+    'CHILDREN': children,
+    'ANNUAL_MILEAGE': mileage,
+    'VEHICLE_TYPE': vehicle_type,
+    'SPEEDING_VIOLATIONS': speeding,
+    'DUIS': duis,
+    'PAST_ACCIDENTS': accidents
+}])
 
 # === Prediction Output ===
 if st.button("Predict"):
-    probability = model.predict_proba(input_df)[0][1]
-    prediction = model.predict(input_df)[0]
+    probability = model.predict_proba(data)[0][1]
+    prediction = model.predict(data)[0]
 
     st.subheader("🔍 Prediction Result")
-    st.markdown(f"**🧮 Probability of Purchasing Insurance:** `{probability:.2%}`")
+    st.markdown(f"**🧾 Probability of Purchasing Insurance:** `{probability:.2%}`")
 
     if prediction == 1:
         st.success("🟢 This customer is likely to purchase car insurance.")
@@ -156,11 +175,8 @@ if st.button("Predict"):
         st.warning("🟠 This customer is unlikely to purchase car insurance.")
         st.markdown("💡 _This customer may require a different marketing approach._")
 
-    # Progress bar
     st.progress(int(probability * 100))
 
-
-    # Gauge chart
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=probability * 100,
@@ -172,7 +188,6 @@ if st.button("Predict"):
     ))
     st.plotly_chart(fig)
 
-    # Feature importances
     st.subheader("🔬 Feature Importances")
     try:
         classifier = model.named_steps['classifier']
@@ -190,8 +205,8 @@ if st.button("Predict"):
         st.error(f"⚠️ Feature importance visualization failed: {e}")
 
     with st.expander("🔎 See Input Data"):
-        st.write(input_df)
-        
+        st.write(data)
+
 # === Footer ===
 st.markdown("---")
 st.markdown("— Made by Şeyma Gülşen Akkuş", unsafe_allow_html=True)
