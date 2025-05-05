@@ -167,6 +167,13 @@ with st.form("input_form"):
 
     if submitted:
         st.session_state.submitted = True
+        st.success("✅ Form submitted successfully!")
+        st.balloons()
+        st.experimental_rerun()
+    else:
+        st.session_state.submitted = False
+        st.warning("⚠️ Please fill in all fields before submitting.")   
+        
 if st.session_state.submitted:
     data = pd.DataFrame([{ 
         'AGE': age,
